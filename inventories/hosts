@@ -1,0 +1,5 @@
+[k8s_cluster]
+localhost ansible_connection=local
+
+[local]
+localhost ansible_python_interpreter=/home/eric/Documents/projects/data-master/lake/myenv/bin/python

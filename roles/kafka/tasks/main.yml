@@ -1,0 +1,48 @@
+- name: Deploy Kafka resources
+  block:
+
+    - name: Create Kafka namespace
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: kafka
+
+    - name: Apply Strimzi operator
+      kubernetes.core.k8s:
+        state: present
+        src: "https://strimzi.io/install/latest?namespace=kafka"
+
+    - name: Deploy Kafka cluster
+      kubernetes.core.k8s:
+        state: present
+        definition: "{{ lookup('file', 'files/kafka-cluster.yml') }}"
+
+  when: type_exec == 'deploy'
+
+- name: Delete all Kafka resources
+  block:
+
+    - name: Delete Kafka cluster
+      kubernetes.core.k8s:
+        state: absent
+        namespace: kafka
+        definition: "{{ lookup('file', 'files/kafka-cluster.yml') }}"
+      
+    - name: Delete Strimzi operator
+      kubernetes.core.k8s:
+        state: absent
+        src: "https://strimzi.io/install/latest?namespace=kafka"
+
+    - name: Delete Kafka namespace
+      kubernetes.core.k8s:
+        state: absent
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: kafka
+
+  when: type_exec == 'delete'

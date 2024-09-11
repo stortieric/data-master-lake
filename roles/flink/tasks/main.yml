@@ -1,0 +1,29 @@
+- name: Ensure Helm is installed
+  apt:
+    name: helm
+    state: present
+  become: true
+
+- name: Add the Bitnami Helm repository
+  command: helm repo add bitnami https://charts.bitnami.com/bitnami
+
+- name: Update Helm repositories
+  command: helm repo update
+
+- block:
+    - name: Install Flink using Helm
+      command: helm install my-flink bitnami/flink \
+        --namespace flink --create-namespace \
+        --set jobmanager.replicaCount=1 \
+        --set taskmanager.replicaCount=3 \
+        --set jobmanager.service.type=NodePort \
+        --set image.pullPolicy=Always \
+        --replace
+
+  when: type_exec == 'deploy'
+
+- block:
+    - name: Uninstall Flink using Helm
+      command: helm uninstall my-flink -n flink
+ 
+  when: type_exec == 'delete'

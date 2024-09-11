@@ -1,0 +1,78 @@
+- name: Deploy Flink resources
+  block:
+
+    - name: Create Flink Namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: flink
+        state: present
+
+    - name: Create Flink ConfigMap
+      kubernetes.core.k8s:
+        state: present
+        resource_definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: flink-config
+            namespace: flink
+          data:
+            flink-conf.yaml: |
+              jobmanager.rpc.address: jobmanager-service.flink.svc.cluster.local
+              taskmanager.numberOfTaskSlots: 2
+              parallelism.default: 1
+
+    - name: Ensure StorageClass is present
+      kubernetes.core.k8s:
+        state: present
+        resource_definition:
+          apiVersion: storage.k8s.io/v1
+          kind: StorageClass
+          metadata:
+            name: standard
+          provisioner: k8s.io/minikube-hostpath
+          reclaimPolicy: Delete
+
+    - name: Deploy Flink using Kubernetes YAML
+      kubernetes.core.k8s:
+        state: present
+        src: files/flink-cluster.yml
+
+  when: type_exec == 'deploy'
+
+- name: Delete Apache Flink resources from Kubernetes
+  block:
+  
+    - name: Delete Flink JobManager Deployment
+      kubernetes.core.k8s:
+        api_version: apps/v1
+        kind: Deployment
+        namespace: flink
+        name: flink-jobmanager
+        state: absent
+
+    - name: Delete Flink TaskManager Deployment
+      kubernetes.core.k8s:
+        api_version: apps/v1
+        kind: Deployment
+        namespace: flink
+        name: flink-taskmanager
+        state: absent
+
+    - name: Delete Flink JobManager Service
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Service
+        namespace: flink
+        name: jobmanager-service
+        state: absent
+
+    - name: Delete Flink Namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: flink
+        state: absent
+
+  when: type_exec == 'delete'
