@@ -1,0 +1,19 @@
+- name: Add Elastic Helm repository
+  command: helm repo add elastic https://helm.elastic.co
+
+- name: Update Helm repositories
+  command: helm repo update
+
+- block:
+    - name: Install Elasticsearch
+      command: helm install elasticsearch elastic/elasticsearch \
+        --namespace elasticsearch --create-namespace \
+        --set index.number_of_shards=3 \
+        --set index.number_of_replicas=1 \
+        --set service.type=NodePort
+  when: type_exec == 'deploy'
+
+- block:
+    - name: Uninstall Elasticsearch
+      command: helm uninstall elasticsearch -n elasticsearch
+  when: type_exec == 'delete'

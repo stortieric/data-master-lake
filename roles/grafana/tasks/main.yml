@@ -1,0 +1,23 @@
+- name: Add Grafana Helm repository
+  command: helm repo add grafana https://grafana.github.io/helm-charts
+
+- name: Update Helm repositories
+  command: helm repo update
+
+- block:
+    - name: Install Grafana using the official chart
+      command: helm install grafana grafana/grafana \
+        --namespace grafana --create-namespace \
+        --set service.type=NodePort \
+        --set admin.password='admin' \
+        --set service.monitor.enabled=true  # Adicione outros parâmetros conforme necessário
+
+  when: type_exec == 'deploy'
+
+- block:
+    - name: Uninstall Grafana
+      command: helm uninstall grafana -n grafana
+
+  when: type_exec == 'delete'
+
+

@@ -1,0 +1,18 @@
+---
+- name: Apply infrastructure with Terraform
+  hosts: localhost
+  tasks:
+    - name: Ensure Terraform is initialized
+      command: terraform init
+      args:
+        chdir: ./terraform
+
+    - name: Plan Terraform infrastructure
+      command: terraform plan -out=tfplan
+      args:
+        chdir: ./terraform
+
+    - name: Apply Terraform infrastructure
+      command: terraform apply tfplan
+      args:
+        chdir: ./terraform

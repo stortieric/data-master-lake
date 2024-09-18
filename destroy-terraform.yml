@@ -1,0 +1,17 @@
+- name: Destroy Terraform-managed infrastructure
+  hosts: localhost
+  tasks:
+    - name: Ensure Terraform is initialized
+      command: terraform init
+      args:
+        chdir: ./terraform
+
+    - name: Plan Terraform destroy
+      command: terraform plan -destroy -out=tfplan
+      args:
+        chdir: ./terraform
+
+    - name: Apply Terraform destroy
+      command: terraform apply tfplan
+      args:
+        chdir: ./terraform

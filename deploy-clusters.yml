@@ -1,8 +1,11 @@
-- hosts: k8s_cluster
+- hosts: localhost
+  vars: 
+    type_exec: "{{ type_exec }}"
   roles:
     - role: kafka
-      vars: 
-        type_exec: "{{ type_exec | default('deploy') }}"
     - role: flink
-      vars: 
-        type_exec: "{{ type_exec | default('deploy') }}"
+    - role: grafana
+    - role: prometheus
+    - role: elasticsearch
+    - role: kibana
+

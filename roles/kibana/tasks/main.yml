@@ -1,0 +1,32 @@
+- name: Pull Kibana Docker image
+  community.docker.docker_image:  # Certifique-se de que o nome do módulo está correto
+    name: docker.elastic.co/kibana/kibana
+    tag: "8.15.1"  # Altere para a versão desejada
+    source: pull
+
+- name: Get Elasticsearch service IP
+  command: kubectl get svc elasticsearch-master -n elasticsearch -o jsonpath='{.spec.clusterIP}'
+  register: elasticsearch_ip
+
+- block:
+    - name: Uninstall existing Kibana if present
+      command: docker rm -f kibana
+    
+    - name: Run Kibana container
+      community.docker.docker_container:
+        name: kibana
+        image: docker.elastic.co/kibana/kibana:8.15.1
+        state: started
+        restart_policy: unless-stopped
+        published_ports:
+          - "5601:5601"  # Mapeia a porta 5601 do contêiner
+        env:
+          ELASTICSEARCH_HOSTS: "http://{{ elasticsearch_ip.stdout }}:9200"  # Usa a IP do Elasticsearch obtido
+
+  when: type_exec == 'deploy'
+
+- block:
+    - name: Stop and remove Kibana container
+      command: docker rm -f kibana
+
+  when: type_exec == 'delete'
